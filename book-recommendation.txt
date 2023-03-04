@@ -1,0 +1,226 @@
+-- create the tables in which to import the data
+
+CREATE TABLE books(
+	ISBN VARCHAR(1000),
+	title VARCHAR(2000),
+	author VARCHAR(1000),
+	year_of_publication SMALLINT,
+	publisher VARCHAR(1000)
+	image_URL_S VARCHAR(5000)
+	image_URL_M VARCHAR(5000)
+	image_URL_L VARCHAR(5000)
+);
+
+CREATE TABLE ratings(
+	user_id BIGINT,
+	ISBN VARCHAR(1000),
+	book_rating INT
+);
+
+
+CREATE TABLE users(
+	user_id BIGINT,
+	location VARCHAR(1000),
+	age SMALLINT
+);
+
+
+-- import the data with the \copy function in PSQL
+
+-- count of books per year of publication
+
+SELECT COUNT(*), year_of_publication
+FROM books
+GROUP BY  year_of_publication
+
+-- fixing impossible data
+
+UPDATE books 
+SET year_of_publication = NULL
+WHERE year_of_publication > 2022
+
+
+-- percent of books with each rating
+
+SELECT (COUNT(*)/(271359)::FLOAT) AS books_percent, book_rating
+FROM books 
+JOIN ratings ON 
+books.isbn = ratings.isbn
+GROUP BY book_rating
+ORDER BY book_rating DESC
+
+-- comparaison of users age and rating
+
+SELECT AVG(book_rating)::NUMERIC(10,2) AS avg_rating, age
+FROM users
+JOIN ratings ON 
+users.user_id = ratings.user_id
+GROUP BY  age
+ORDER BY age
+
+-- create view for the previous query
+
+CREATE VIEW avg_rating_per_age AS
+SELECT AVG(book_rating)::NUMERIC(10,2) AS avg_rating, age
+FROM users
+JOIN ratings ON 
+users.user_id = ratings.user_id
+GROUP BY  age
+ORDER BY age
+
+-- highest average rating using the view
+
+SELECT MAX(avg_rating)
+FROM avg_rating_per_age
+
+
+-- age of the people who gave the highest rating using the view
+
+SELECT age
+FROM avg_rating_per_age
+WHERE avg_rating = 9
+
+-- case statement to assign the historical age
+
+SELECT title, year_of_publication,
+CASE
+	WHEN (year_of_publication < 1492) THEN 'middle age'
+	WHEN (year_of_publication BETWEEN 1492 AND 1789) THEN 'modern age'
+	WHEN (year_of_publication > 1789) THEN 'contemporary age'
+ELSE 'other' 
+END  AS historical_age
+FROM books
+
+-- create view
+
+CREATE VIEW history AS
+SELECT title, year_of_publication,
+CASE
+	WHEN (year_of_publication < 1492) THEN 'middle age'
+	WHEN (year_of_publication BETWEEN 1492 AND 1789) THEN 'modern age'
+	WHEN (year_of_publication > 1789) THEN 'contemporary age'
+ELSE 'other' 
+END  AS historical_age
+FROM books
+
+-- boooks per historical age
+
+SELECT DISTINCT historical_age, COUNT(historical_age)
+FROM history
+GROUP BY historical_age
+
+-- average rating per location
+
+SELECT DISTINCT location, AVG(book_rating)
+FROM users
+JOIN ratings ON
+users.user_id = ratings.user_id
+GROUP BY location
+
+-- locations grouped by contient 
+
+SELECT user_id,location,
+CASE
+	WHEN location LIKE '%usa' THEN 'North America'
+	WHEN location LIKE '%canada' THEN 'South America'
+	WHEN location LIKE '%japan' THEN 'Asia'
+	WHEN location LIKE '%china' THEN 'Asia'
+	WHEN location LIKE '%sri lanka' THEN 'Asia'
+	WHEN location LIKE '%australia' THEN 'Ocenania'
+	WHEN location LIKE '%argentina' THEN 'South America'
+	WHEN location LIKE '%netherlands' THEN 'Europe'
+	WHEN location LIKE '%germany' THEN 'Europe'
+	WHEN location LIKE '%united kindom' THEN 'Europe'
+	WHEN location LIKE '%belgium' THEN 'Europe'
+	WHEN location LIKE '%spain' THEN 'Europe'
+	WHEN location LIKE '%france' THEN 'Europe'
+	WHEN location LIKE '%italy' THEN 'Europe'
+	WHEN location LIKE '%finland' THEN 'Europe'
+	WHEN location LIKE '%portugal' THEN 'Europe'
+	WHEN location LIKE '%switzerland' THEN 'Europe'
+	WHEN location LIKE '%thailand' THEN 'Asia'
+	WHEN location LIKE '%slovenia' THEN 'Europe'
+	WHEN location LIKE '%greece' THEN 'Europe'
+	WHEN location LIKE '%ireland' THEN 'Europe'
+	WHEN location LIKE '%poland' THEN 'Europe'
+	WHEN location LIKE '%israel' THEN 'Asia'
+	WHEN location LIKE '%iran' THEN 'Asia'
+	WHEN location LIKE '%new zeland' THEN 'Oceania'
+	WHEN location LIKE '%romania' THEN 'Europe'
+	WHEN location LIKE '%mexico' THEN 'South America'
+	WHEN location LIKE '%austria' THEN 'Europe'
+	WHEN location LIKE '%south africa' THEN 'Africa'
+	WHEN location LIKE '%denmark' THEN 'Europe'
+	WHEN location LIKE '%brazil' THEN 'South America'
+	WHEN location LIKE '%singapore' THEN 'Asia'
+	WHEN location LIKE '%india' THEN 'Asia'
+	WHEN location LIKE '%luxembourg' THEN 'Europe'
+	WHEN location LIKE '%indonesia' THEN 'Asia'
+	WHEN location LIKE '%nigeria' THEN 'Africa'
+	WHEN location LIKE '%pakistan' THEN 'Asia'
+ELSE 'other'
+END AS continent
+FROM users
+
+
+-- create view
+
+CREATE VIEW users_continent AS
+SELECT user_id,location,
+CASE
+	WHEN location LIKE '%usa' THEN 'North America'
+	WHEN location LIKE '%canada' THEN 'South America'
+	WHEN location LIKE '%japan' THEN 'Asia'
+	WHEN location LIKE '%china' THEN 'Asia'
+	WHEN location LIKE '%sri lanka' THEN 'Asia'
+	WHEN location LIKE '%australia' THEN 'Ocenania'
+	WHEN location LIKE '%argentina' THEN 'South America'
+	WHEN location LIKE '%netherlands' THEN 'Europe'
+	WHEN location LIKE '%germany' THEN 'Europe'
+	WHEN location LIKE '%united kindom' THEN 'Europe'
+	WHEN location LIKE '%belgium' THEN 'Europe'
+	WHEN location LIKE '%spain' THEN 'Europe'
+	WHEN location LIKE '%france' THEN 'Europe'
+	WHEN location LIKE '%italy' THEN 'Europe'
+	WHEN location LIKE '%finland' THEN 'Europe'
+	WHEN location LIKE '%portugal' THEN 'Europe'
+	WHEN location LIKE '%switzerland' THEN 'Europe'
+	WHEN location LIKE '%thailand' THEN 'Asia'
+	WHEN location LIKE '%slovenia' THEN 'Europe'
+	WHEN location LIKE '%greece' THEN 'Europe'
+	WHEN location LIKE '%ireland' THEN 'Europe'
+	WHEN location LIKE '%poland' THEN 'Europe'
+	WHEN location LIKE '%israel' THEN 'Asia'
+	WHEN location LIKE '%iran' THEN 'Asia'
+	WHEN location LIKE '%new zeland' THEN 'Oceania'
+	WHEN location LIKE '%romania' THEN 'Europe'
+	WHEN location LIKE '%mexico' THEN 'South America'
+	WHEN location LIKE '%austria' THEN 'Europe'
+	WHEN location LIKE '%south africa' THEN 'Africa'
+	WHEN location LIKE '%denmark' THEN 'Europe'
+	WHEN location LIKE '%brazil' THEN 'South America'
+	WHEN location LIKE '%singapore' THEN 'Asia'
+	WHEN location LIKE '%india' THEN 'Asia'
+	WHEN location LIKE '%luxembourg' THEN 'Europe'
+	WHEN location LIKE '%indonesia' THEN 'Asia'
+	WHEN location LIKE '%nigeria' THEN 'Africa'
+	WHEN location LIKE '%pakistan' THEN 'Asia'
+ELSE 'other'
+END AS continent
+FROM users
+
+
+-- percentage of users per continent
+
+SELECT DISTINCT continent, (COUNT(continent)/278858::FLOAT)
+FROM users_continent
+GROUP BY continent
+
+
+-- average rating per continent
+
+SELECT DISTINCT continent, AVG(book_rating)
+FROM users_continent
+JOIN ratings ON
+users_continent.user_id = ratings.user_id
+GROUP BY continent
